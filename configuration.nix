@@ -2,20 +2,16 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, stablepkgs, modulesPath, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      inputs.home-manager.nixosModules.default
     ];
 
-  #nix = {
-  #package = pkgs.nixFlakes;
-  #extraOptions = lib.optionalString (config.nix.package == pkgs.nixFlakes)
-  #  "experimental-features = nix-command flakes";
-  #  }; 
-
+  
   # direnv
   programs.direnv.enable = true;
   programs.direnv.loadInNixShell = true;
@@ -26,17 +22,14 @@
   programs.xwayland.enable = true;
   programs.hyprland.xwayland.enable = true;
 
-
-  # Bootloader 
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
-  # boot.kernelPackages = pkgs.linuxPackages_zen;
-  # Use the systemd-boot EFI boot loader.
+  # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 10;
   boot.initrd.kernelModules = [ "amdgpu" "radeon"];
 
-  networking.hostName = "nixos"; # Define your hostname.
+
+  networking.hostName = "asusg14"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -66,22 +59,17 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  #services.xserver.autorun = true;
-  #services.xserver.layout = "us";
-  #services.xserver.desktopManager.default = "none";
-  #services.xserver.desktopManager.xterm.enabe = false;
+
+  # Enable the KDE Plasma Desktop Environment.
+  # services.xserver.enable = true;
   services.xserver.displayManager.sddm.enable = true;
   services.xserver.displayManager.sddm.wayland.enable = true;
-  services.xserver.displayManager.sddm.theme = "breeze-theme";
+  services.xserver.desktopManager.plasma5.enable = true;
   services.xserver.windowManager.i3.enable = true;
-  #services.xserver.displayManager.ly.enable = true;  
-
-  # Enable the XFCE Desktop Environment.
-  #services.xserver.displayManager.lightdm.enable = true;
-  #services.xserver.displayManager.lightdm.greeters.gtk.enable = true;
   services.xserver.desktopManager.xfce.enable = true;
-  
-   # enable flatpak
+  services.displayManager.sddm.theme = "catppuccin-sddm";
+
+  # enable flatpak
   services.flatpak.enable = true;
   xdg.portal.enable = true;
   
@@ -98,23 +86,21 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.package =  pkgs.bluez;
+  # sound.enable = true;
+  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
-  #services.pipewire = {
-  #  enable = true;
-  #  alsa.enable = true;
-  #  alsa.support32Bit = true;
-  #  pulse.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
     # If you want to use JACK applications, uncomment this
-  #  jack.enable = true;
+    #jack.enable = true;
 
     # use the example session manager (no others are packaged yet so this is enabled by default,
     # no need to redefine it in your config for now)
     #media-session.enable = true;
-  #};
+  };
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -123,22 +109,22 @@
   users.users.densetsu = {
     isNormalUser = true;
     description = "densetsu";
-    extraGroups = [ "networkmanager" "wheel" "dialout" ];
+    extraGroups = [ "networkmanager" "wheel" "dialout"];
     packages = with pkgs; [
+      firefox
+      kate
       vim
       neovim
-      firefox
-      floorp
+      # floorp
       librewolf
       chromium
       openssh
       lunarvim
-      pkgs.gh 
-    # thunderbird
+      pkgs.gh
     ];
   };
-  
-   # for virtualization like gnome-boces or virt-manager
+   
+  # for virtualization like gnome-boces or virt-manager
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
   virtualisation.podman.enable = true;
@@ -171,8 +157,8 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    # bash and zsh 
+    neofetch
+    asusctl
     nix-bash-completions
     nix-zsh-completions
     zsh-autocomplete
@@ -182,6 +168,33 @@
     zsh-history-substring-search
     zsh-fast-syntax-highlighting
     nixd
+    nix-top
+    # nix-doc
+    nix-pin
+    nix-tree
+    nix-melt
+    nix-info
+    nix-diff
+    nix-serve
+    nix-web
+    nix-tree
+    nix-script
+    nix-index
+    nix-update
+    nix-script
+    nix-bundle
+    nixos-icons
+    nixos-shell
+    nix-plugins
+    nix-search-cli
+    nixpkgs-lint
+    nixos-option
+    nom
+    nh
+    nil
+    nvd
+    nix-output-monitor
+  
   #bootstrapping
     wget
     gnumake
@@ -263,8 +276,8 @@
     starship
     nixos-icons
     luna-icons
-    sweet-folders
-    candy-icons
+    # sweet-folders
+    # candy-icons
     material-icons
     material-design-icons
     luna-icons
@@ -278,7 +291,7 @@
    #vim and programming 
     vimPlugins.nvim-treesitter-textsubjects
     nixos-install-tools
-    nodejs_21
+    # nodejs_21
     lua
     python3
     clipit
@@ -287,6 +300,14 @@
     bluez
 
    #misc
+    linode-cli
+    teamviewer
+    microsoft-edge
+    yazi
+    gummy
+    remmina
+    catppuccin-sddm
+    zed-editor
     microcodeAmd
     amdgpu_top
     amdctl
@@ -303,7 +324,7 @@
     pkgs.opensc
     pkgs.ark
     pam_p11
-    pam_usb
+    # pam_usb
     nss
     nss_latest
     acsccid
@@ -313,7 +334,7 @@
     check_smartmon
     glibc
     kvmtool
-    nvtop-amd
+    nvtopPackages.panthor
 
    #hyprland
     hyprland
@@ -328,8 +349,10 @@
     kitty
     kitty-themes
     swaybg
+    waypaper
 
    #waybar
+    nm-tray
     gtkmm3
     gtk-layer-shell
     jsoncpp
@@ -371,10 +394,10 @@
     protonup-qt
     lutris
     steamtinkerlaunch
+  
+  ];
 
-   ];
-
-   fonts = {
+  fonts = {
     fonts = with pkgs; [
       noto-fonts
       noto-fonts-cjk
@@ -388,19 +411,24 @@
       terminus_font_ttf
       terminus-nerdfont
     ];
+     
     fontconfig.defaultFonts = {
       serif = [ "Noto Serif" "Source Han Serif" ];
       sansSerif = [ "Open Sans" "Source Han Sans" ];
       emoji = [ "openmoji-color" ];
     };
   };
+
+  environment.sessionVariables = {
+  FLAKE = "/etc/nixos/configuration.nix";
+   };
   
    # nix grub generations
   nix.settings.auto-optimise-store = true;
   nix.gc = {
   automatic = true;
   dates = "weekly";
-  options = "--delete-older-than 5d";
+  options = "--delete-older-than 3d";
   };
 
     nixpkgs.config.permittedInsecurePackages = [
@@ -416,8 +444,14 @@
   #   enableSSHSupport = true;
   # };
 
-  # Supergfxctl
+  # List services that you want to enable:
   services.supergfxd.enable = true;
+  services = {
+    asusd = {
+      enable = true;
+      enableUserService = true;
+    };
+  };
   services.supergfxd.settings = {
   supergfxctl-mode = "Integrated";
   gfx-vfio-enable = true;
@@ -428,13 +462,18 @@
   enable = true;
   wantedBy = [ "multi-user.target" ];
   };
-  #services.asusd.enable = true;
-    
-    # amdgpu setup
+  
+  #pscsd
+  services.pcscd.enable = true;
+ 
+  # tlp services
+ # services.tlp.enable = true;
+  
+   # amdgpu setup
     #Enable OpenGL
   hardware.opengl = {
     enable = true;
-    driSupport = true;
+    # driSupport = true;
     driSupport32Bit = true;
   };
 
@@ -471,12 +510,11 @@
   };
 
   # List services that you want to enable:
+    services.teamviewer.enable = true;
     services.sshd.enable = true;
-    # services.tlp.enable = true;
-    services.pcscd.enable = true;
     services.postgresql.enable = true;
-    services.asusd.enableUserService = true;
-    services.asusd.enable = true;
+    # services.asusd.enableUserService = true;
+    # services.asusd.enable = true;
     programs.rog-control-center.enable = true;
     programs.rog-control-center.autoStart = true;
     services.smartd.enable = true;
@@ -501,8 +539,8 @@
   '';  
 
   # Enable the OpenSSH daemon.
-   services.openssh.enable = true;
-  	services.openssh.ports = [
+  services.openssh.enable = true;
+  services.openssh.ports = [
   	  22
   	];
 
@@ -521,5 +559,3 @@
   system.stateVersion = "23.11"; # Did you read the comment?
 
 }
-
-
