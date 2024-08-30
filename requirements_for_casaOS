@@ -1,0 +1,11 @@
+for CasaOS for the server the required programs for it to work are:
+
+smartmontools
+parted
+nfts3g
+udevil
+samba
+cifs-utils
+mergerfs
+unzip
+docker
