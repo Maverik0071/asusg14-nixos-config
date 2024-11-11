@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-terminal" version="1.0">
+  <property name="scrolling-on-output" type="bool" value="true"/>
+  <property name="kinetic-scrolling" type="bool" value="true"/>
+  <property name="scrolling-unlimited" type="bool" value="true"/>
+  <property name="overlay-scrolling" type="bool" value="true"/>
+  <property name="command-login-shell" type="bool" value="true"/>
+  <property name="misc-copy-on-select" type="bool" value="true"/>
+  <property name="color-cursor-use-default" type="bool" value="false"/>
+  <property name="color-selection-use-default" type="bool" value="false"/>
+  <property name="color-bold-use-default" type="bool" value="false"/>
+  <property name="color-foreground" type="string" value="#17f018"/>
+  <property name="color-background" type="string" value="#000000"/>
+  <property name="color-background-vary" type="bool" value="true"/>
+  <property name="color-cursor-foreground" type="string" value=""/>
+  <property name="color-cursor" type="string" value=""/>
+  <property name="color-selection" type="string" value=""/>
+  <property name="color-selection-background" type="string" value=""/>
+  <property name="color-bold" type="string" value=""/>
+  <property name="color-palette" type="string" value="#000000;#aa0000;#00aa00;#aa5500;#0000aa;#aa00aa;#00aaaa;#aaaaaa;#555555;#ff5555;#55ff55;#ffff55;#5555ff;#ff55ff;#55ffff;#ffffff"/>
+  <property name="color-bold-is-bright" type="bool" value="true"/>
+  <property name="color-use-theme" type="bool" value="false"/>
+  <property name="tab-activity-color" type="string" value="#aa0000"/>
+  <property name="misc-cursor-blinks" type="bool" value="true"/>
+  <property name="misc-menubar-default" type="bool" value="false"/>
+  <property name="misc-slim-tabs" type="bool" value="true"/>
+  <property name="font-name" type="string" value="IosevkaTerm Nerd Font Mono Ultra-Bold 16"/>
+  <property name="background-mode" type="string" value="TERMINAL_BACKGROUND_TRANSPARENT"/>
+  <property name="misc-bell" type="bool" value="true"/>
+  <property name="misc-bell-urgent" type="bool" value="true"/>
+  <property name="title-mode" type="string" value="TERMINAL_TITLE_HIDE"/>
+  <property name="background-darkness" type="double" value="0.59999999999999998"/>
+  <property name="misc-confirm-close" type="bool" value="false"/>
+  <property name="run-custom-command" type="bool" value="true"/>
+  <property name="custom-command" type="string" value="distrobox enter archlinux"/>
+  <property name="use-default-working-dir" type="bool" value="true"/>
+  <property name="default-working-dir" type="string" value="distrobox enter archlinux"/>
+</channel>

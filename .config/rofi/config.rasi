@@ -1,0 +1,5 @@
+//@theme "/nix/store/4v4flzib9cxxg3z5mvjb8jlinihx2hbw-rofi-1.7.5/share/rofi/themes/sidebar.rasi"
+//@theme "/nix/store/7my5fa4c4gya5k6hhrygapickphm8sdc-rofi-1.7.5/share/rofi/themes/dmenu.rasi"
+//@theme "/run/current-system/sw/share/rofi/themes/docu.rasi"
+//@theme "/nix/store/9r2bkkyfjpilrwld4q481ci471mziydr-rofi-1.7.5/share/rofi/themes/arthur.rasi"
+@theme "/nix/store/vf9vkxcnmw6y1y2xza27rfjg2gfmvyqf-rofi-1.7.5/share/rofi/themes/arthur.rasi"

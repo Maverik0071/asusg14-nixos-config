@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-notifyd" version="1.0">
+  <property name="log-max-size-enabled" type="bool" value="true"/>
+  <property name="applications" type="empty">
+    <property name="known_applications" type="array">
+      <value type="string" value="chromium-browser"/>
+      <value type="string" value="com.discordapp.Discord"/>
+      <value type="string" value="Firefox"/>
+      <value type="string" value="NetworkManager(nm-tray)"/>
+      <value type="string" value="org.freedesktop.network-manager-applet"/>
+      <value type="string" value="pasystray"/>
+      <value type="string" value="ROG Control"/>
+      <value type="string" value="rog-control-center"/>
+      <value type="string" value="Variety"/>
+      <value type="string" value="Xfce volume control"/>
+    </property>
+  </property>
+  <property name="date-time-custom-format" type="string" value="%a %H:%M:%S"/>
+  <property name="do-not-disturb" type="bool" value="false"/>
+  <property name="do-slideout" type="bool" value="true"/>
+</channel>
