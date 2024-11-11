@@ -9,6 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
+    #   inputs.nixos-cosmic.nixosModules.default
     ];
 
   
@@ -25,10 +26,13 @@
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.systemd-boot.configurationLimit = 10;
+  boot.loader.systemd-boot.configurationLimit = 7;
   boot.initrd.kernelModules = [ "amdgpu" "radeon"];
-
-
+  #boot.loader.grub.enable = true;
+  #boot.loader.grub.devices = [ "/dev/nvme0n1p2" ];
+  # boot.loader.grub.useOSProber = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+  #boot.loader.grub.configurationLimit = 10;
   networking.hostName = "asusg14"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -58,16 +62,20 @@
   };
 
   # Enable the X11 windowing system.
-  services.xserver.enable = true;
+   services.xserver.enable = true;
 
   # Enable the KDE Plasma Desktop Environment.
-  # services.xserver.enable = true;
-  services.xserver.displayManager.sddm.enable = true;
-  services.xserver.displayManager.sddm.wayland.enable = true;
+  #services.displayManager.sddm.enable = true;
+  #services.displayManager.sddm.wayland.enable = true;
   services.xserver.desktopManager.plasma5.enable = true;
   services.xserver.windowManager.i3.enable = true;
   services.xserver.desktopManager.xfce.enable = true;
-  services.displayManager.sddm.theme = "catppuccin-sddm";
+  services.xserver.displayManager.lightdm.enable = true;
+  services.xserver.displayManager.lightdm.greeters.gtk.enable = true;
+
+  #cosmic - desktop
+  # services.desktopManager.cosmic.enable = true;
+  # services.displayManager.cosmic-greeter.enable = true;
 
   # enable flatpak
   services.flatpak.enable = true;
@@ -78,8 +86,8 @@
 
   # Configure keymap in X11
   services.xserver = {
-    layout = "us";
-    xkbVariant = "";
+    xkb.layout = "us";
+    xkb.variant = "";
   };
 
   # Enable CUPS to print documents.
@@ -128,6 +136,7 @@
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
   virtualisation.podman.enable = true;
+  virtualisation.docker.enable = true;
  
   #spices (virtualization)
   services.spice-vdagentd.enable = true;  
@@ -144,6 +153,9 @@
   # zsh terminal
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
+  programs.zsh.ohMyZsh.customPkgs = [
+   "zsh-powerlevel10k"
+  ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -172,7 +184,7 @@
     # nix-doc
     nix-pin
     nix-tree
-    nix-melt
+    # nix-melt
     nix-info
     nix-diff
     nix-serve
@@ -263,8 +275,8 @@
     google-fonts
     source-code-pro
     terminus_font
-    nerdfonts
-    terminus-nerdfont
+    # nerdfonts
+    # terminus-nerdfont
     ranger
     i3status
     pkgs.pcscliteWithPolkit
@@ -275,12 +287,10 @@
     pkgs.opensc
     starship
     nixos-icons
-    luna-icons
     # sweet-folders
     # candy-icons
     material-icons
     material-design-icons
-    luna-icons
     variety
     sweet
     catppuccin
@@ -300,10 +310,18 @@
     bluez
 
    #misc
+    geany
+    nitch
+    docker
+    # gnome.gnome-boxes
+    xorg.xbacklight
+    xorg.xkill
+    killall
+    freshfetch
     linode-cli
     teamviewer
     microsoft-edge
-    yazi
+    # yazi
     gummy
     remmina
     catppuccin-sddm
@@ -331,7 +349,7 @@
     distrobox
     vscodium
     smartmontools
-    check_smartmon
+    # check_smartmon
     glibc
     kvmtool
     nvtopPackages.panthor
@@ -388,19 +406,18 @@
     # Steam
     steam
     steam-run
-    pkgs.steamPackages.steam-runtime
+    # steamPackages.steam-runtime
     sc-controller
     gamescope
     protonup-qt
     lutris
     steamtinkerlaunch
-  
-  ];
+    ];
 
   fonts = {
     fonts = with pkgs; [
       noto-fonts
-      noto-fonts-cjk
+      noto-fonts-cjk-sans
       noto-fonts-emoji
       font-awesome
       source-han-sans
@@ -409,7 +426,7 @@
       source-han-serif-japanese
       openmoji-color
       terminus_font_ttf
-      terminus-nerdfont
+      # terminus-nerdfont
     ];
      
     fontconfig.defaultFonts = {
@@ -420,8 +437,8 @@
   };
 
   environment.sessionVariables = {
-  FLAKE = "/etc/nixos/configuration.nix";
-   };
+  FLAKE = "/etc/nixos";
+  };
   
    # nix grub generations
   nix.settings.auto-optimise-store = true;
@@ -432,7 +449,7 @@
   };
 
     nixpkgs.config.permittedInsecurePackages = [
-    "nodejs-12.22.12"
+    # "nodejs-12.22.12"
     "python-2.7.18.7"
   ];
 
@@ -465,23 +482,29 @@
   
   #pscsd
   services.pcscd.enable = true;
+  services.pcscd.plugins = [
+    pkgs.ccid
+    pkgs.opensc
+    pkgs.pcsclite
+    pkgs.pcsc-tools
+    ];
  
   # tlp services
  # services.tlp.enable = true;
   
    # amdgpu setup
     #Enable OpenGL
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
     # driSupport = true;
-    driSupport32Bit = true;
+    enable32Bit = true;
   };
 
-  hardware.opengl.extraPackages = with pkgs; [
+  hardware.graphics.extraPackages = with pkgs; [
   amdvlk
   ];
   # For 32 bit applications 
-  hardware.opengl.extraPackages32 = with pkgs; [
+  hardware.graphics.extraPackages32 = with pkgs; [
   driversi686Linux.amdvlk
   ];
 
@@ -518,13 +541,13 @@
     programs.rog-control-center.enable = true;
     programs.rog-control-center.autoStart = true;
     services.smartd.enable = true;
-    hardware.usbStorage.manageStartStop = true;
+    hardware.usbStorage.manageShutdown = true;
     programs.zsh.enableLsColors = true;
     programs.zsh.enableCompletion = true;
     programs.zsh.enableBashCompletion = true;
     programs.zsh.autosuggestions.strategy = [
      "history"
-      ]; 
+      ];
 
     programs.zsh.autosuggestions.async = true;
     virtualisation.kvmgt.enable = true;
@@ -556,6 +579,6 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
 
 }
