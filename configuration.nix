@@ -2,39 +2,83 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, modulesPath, lib, inputs, home-manager, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      #nixos-cosmic.nixosModules.default
       inputs.home-manager.nixosModules.default
-    #   inputs.nixos-cosmic.nixosModules.default
     ];
+   
+   # XWayland
+   programs.xwayland.enable = true;
 
+  # amdgpu setup
+  # Enable OpenGL
+  hardware.opengl = {
+    enable = true;
+   # driSupport = true;
+   # driSupport32Bit = true;
+  };
+
+  hardware.opengl.extraPackages = with pkgs; [
+  amdvlk
+  ];
+  # For 32 bit applications 
+  hardware.opengl.extraPackages32 = with pkgs; [
+  driversi686Linux.amdvlk
+  ];
+   
+  # Load nvidia driver for Xorg and Wayland
+  services.xserver.videoDrivers = ["amdgpu radeon"];
   
-  # direnv
+  hardware.nvidia = {
+
+    # Modesetting is required.
+    modesetting.enable = true;
+
+    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
+    powerManagement.enable = false;
+    # Fine-grained power management. Turns off GPU when not in use.
+    # Experimental and only works on modern Nvidia GPUs (Turing or newer).
+    powerManagement.finegrained = false;
+
+    # Use the NVidia open source kernel module (not to be confused with the
+    # independent third-party "nouveau" open source driver).
+    # Support is limited to the Turing and later architectures. Full list of 
+    # supported GPUs is at: 
+    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
+    # Only available from driver 515.43.04+
+    # Currently alpha-quality/buggy, so false is currently the recommended setting.
+    open = false;
+
+    # Enable the Nvidia settings menu,
+	# accessible via `nvidia-settings`.
+    nvidiaSettings = true;
+
+    # Optionally, you may need to select the appropriate driver version for your specific GPU.
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  # Bootloader
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "nodev";
+  # boot.loader.grub.useOSProber = true;
+ 
+
+  boot.initrd.kernelModules = [ "amdgpu"];
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  #direnv
   programs.direnv.enable = true;
   programs.direnv.loadInNixShell = true;
   programs.direnv.nix-direnv.enable = true;
-  programs.direnv.silent = true;
+  programs.direnv.silent = true;    
 
-  # XWayland
-  programs.xwayland.enable = true;
-  programs.hyprland.xwayland.enable = true;
-
-  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.systemd-boot.configurationLimit = 7;
-  boot.initrd.kernelModules = [ "amdgpu" "radeon"];
-  #boot.loader.grub.enable = true;
-  #boot.loader.grub.devices = [ "/dev/nvme0n1p2" ];
-  # boot.loader.grub.useOSProber = true;
-  # boot.loader.efi.canTouchEfiVariables = true;
-  #boot.loader.grub.configurationLimit = 10;
-  networking.hostName = "asusg14"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  networking.hostName = "wolvesden"; # Define your hostname.
+  #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -62,39 +106,35 @@
   };
 
   # Enable the X11 windowing system.
-   services.xserver.enable = true;
+  services.xserver.enable = true;
 
-  # Enable the KDE Plasma Desktop Environment.
-  #services.displayManager.sddm.enable = true;
-  #services.displayManager.sddm.wayland.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
-  services.xserver.windowManager.i3.enable = true;
-  services.xserver.desktopManager.xfce.enable = true;
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.displayManager.lightdm.greeters.gtk.enable = true;
-
-  #cosmic - desktop
-  # services.desktopManager.cosmic.enable = true;
-  # services.displayManager.cosmic-greeter.enable = true;
-
-  # enable flatpak
-  services.flatpak.enable = true;
-  xdg.portal.enable = true;
+  # gnome desktop
+  programs.dconf.enable = true;
+  nixpkgs.config.allowAliases = false;
+  services.sysprof.enable = true;
+  # nixpkgs.config.firefox.enableGnomeExtensions = true;
   
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk pkgs.xdg-desktop-portal-hyprland];
-  xdg.portal.config.common.default = "gtk";
+  # hyprland
+  # programs.hyprland.enable = true;
 
   # Configure keymap in X11
   services.xserver = {
-    xkb.layout = "us";
-    xkb.variant = "";
+    layout = "us";
+    xkbVariant = "";
   };
+
+  # enable flatpak
+  services.flatpak.enable = true;
+  
+  # xdg portals
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-cosmic pkgs.xdg-desktop-portal-hyprland ];
+  xdg.portal.config.common.default = "cosmic";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  # sound.enable = true;
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -103,7 +143,7 @@
     alsa.support32Bit = true;
     pulse.enable = true;
     # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
+    jack.enable = true;
 
     # use the example session manager (no others are packaged yet so this is enabled by default,
     # no need to redefine it in your config for now)
@@ -117,60 +157,52 @@
   users.users.densetsu = {
     isNormalUser = true;
     description = "densetsu";
-    extraGroups = [ "networkmanager" "wheel" "dialout"];
+    extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       firefox
-      kate
-      vim
-      neovim
-      # floorp
-      librewolf
-      chromium
-      openssh
-      lunarvim
-      pkgs.gh
+      ungoogled-chromium
     ];
   };
-   
+
   # for virtualization like gnome-boces or virt-manager
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
+
+  # podman
   virtualisation.podman.enable = true;
+  # virtualisation.podman.networkSocket.enable = true;
+
+  # docker 
   virtualisation.docker.enable = true;
- 
+  # virtualisation.podman.dockerSocket.enable = true;
+  
   #spices (virtualization)
   services.spice-vdagentd.enable = true;  
   
-  # for enabling Hyprland Window manager
-  programs.hyprland.enable = true;
-
   # LF file manager
   # programs.lf.enable = true;
 
   # ZRAM
   zramSwap.enable = true;
-
+  
   # zsh terminal
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
-  programs.zsh.ohMyZsh.customPkgs = [
-   "zsh-powerlevel10k"
-  ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  
-  # Enable Flakes and the command-line tool with nix command settings 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # Set default editor to vim
+  # Enable Flakes and the command-line tool with nix command settings 
+  nix.settings.experimental-features = [ "nix-command flakes"];
+  
+   # Set default editor to vim
   environment.variables.EDITOR = "lvim";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    neofetch
-    asusctl
+     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+   # bash and zsh 
     nix-bash-completions
     nix-zsh-completions
     zsh-autocomplete
@@ -180,17 +212,18 @@
     zsh-history-substring-search
     zsh-fast-syntax-highlighting
     nixd
+    zsh-nix-shell
+    nix-search-cli
+    pkgs.nvd
+    nix-output-monitor
     nix-top
-    # nix-doc
+    nix-doc
     nix-pin
     nix-tree
-    # nix-melt
+    nix-melt
     nix-info
     nix-diff
     nix-serve
-    nix-web
-    nix-tree
-    nix-script
     nix-index
     nix-update
     nix-script
@@ -198,48 +231,82 @@
     nixos-icons
     nixos-shell
     nix-plugins
-    nix-search-cli
     nixpkgs-lint
     nixos-option
     nom
+    nitch
     nh
     nil
-    nvd
-    nix-output-monitor
-  
-  #bootstrapping
+
+    zsh-z
+    zsh-bd
+    zsh-abbr
+    zsh-defer
+    zsh-zhooks
+    zsh-prezto
+    zsh-forgit
+    zsh-f-sy-h
+    zsh-nix-shell
+    zsh-clipboard
+    zsh-completions
+    zsh-git-prompt
+    zsh-powerlevel10k
+    zsh-autocomplete
+
+    # system pacakages
+    gzip
     wget
-    gnumake
-    gnumake42
     curl
-    pkgs.gh
+    pkgs.libsForQt5.ark
     git
-    gitFull
-    gita
-    vim
-    arandr
-    pkgs.chromium-xorg-conf
     meson
     gcc
     clang
     cl 
     zig
-    gnumake
-    gnumake42
     cmake
-    meson
     ninja
     libsForQt5.full
     libsForQt5.qt5.qtbase
     qt6.full
     lm_sensors
-    xfce.xfce4-sensors-plugin
     xsensors
     qt6.qtbase
-    qt6.qmake
-    fanctl
-
-   #i3wm pkgs
+    gnumake
+    gnumake42
+    zsh
+    fzf-zsh
+    tmux
+    fastfetch
+    lsd
+    zsh
+    #nitrogen
+    pfetch
+    neofetch
+    gh
+    pasystray
+    dhcpdump
+    btop
+    postgresql
+    w3m
+    usbimager
+    wezterm
+    lunarvim
+    distrobox
+    lshw
+    rPackages.gbm
+    gtk-layer-shell
+    clipit
+    nitrogen
+    
+   # hyprland packages
+    yazi
+    yazi-unwrapped
+    waypaper
+    hyprpaper
+    xfce.thunar-archive-plugin
+    xfce.thunar
+    xfce.thunar-volman
     dmenu
     rofi
     autotiling
@@ -249,133 +316,104 @@
     dunst
     pavucontrol
     jgmenu
-    nix-zsh-completions
-    zsh
-    tmux
-    fzf-zsh
-    nitrogen
-    pfetch
-    neofetch
-    neovim
     picom
     networkmanager_dmenu
     papirus-folders
     papirus-nord
     sweet
     clipmenu
-    volumeicon
     brightnessctl
-
-  #  fonts and themes
-    hermit
-    powerline-fonts
-    noto-fonts
-    corefonts
-    libertine
-    google-fonts
-    source-code-pro
-    terminus_font
-    # nerdfonts
-    # terminus-nerdfont
+    nwg-look
+    feh
+    wl-clipboard
+    wlogout 
     ranger
-    i3status
-    pkgs.pcscliteWithPolkit
-    pkgs.pcsctools
-    pkgs.scmccid
-    pkgs.ccid
-    pkgs.pcsclite
-    pkgs.opensc
-    starship
-    nixos-icons
-    # sweet-folders
-    # candy-icons
-    material-icons
-    material-design-icons
     variety
-    sweet
-    catppuccin
-    comixcursors
-    ayu-theme-gtk
-    hvm
-
-   #vim and programming 
-    vimPlugins.nvim-treesitter-textsubjects
-    nixos-install-tools
-    # nodejs_21
-    lua
-    python3
     clipit
+    volumeicon
     rofi-power-menu
     blueberry
-    bluez
-
-   #misc
-    geany
-    nitch
-    docker
-    # gnome.gnome-boxes
-    xorg.xbacklight
-    xorg.xkill
-    killall
-    freshfetch
-    linode-cli
-    teamviewer
-    microsoft-edge
-    # yazi
-    gummy
-    remmina
-    catppuccin-sddm
-    zed-editor
-    microcodeAmd
-    amdgpu_top
-    amdctl
-    pasystray
-    dhcpdump
-    lf
-    postgresql
-    w3m
-    usbimager
-    xdragon
-    lunarvim
-    pcsctools
-    pcsclite
-    pkgs.opensc
-    pkgs.ark
-    pam_p11
-    # pam_usb
-    nss
-    nss_latest
-    acsccid
-    distrobox
-    vscodium
-    smartmontools
-    # check_smartmon
-    glibc
-    kvmtool
-    nvtopPackages.panthor
-
-   #hyprland
-    hyprland
-    swaylock
-    xdg-desktop-portal-hyprland
-    rPackages.gbm
     hyprland-protocols
     libdrm
+    wayland
     wayland-protocols
-    waybar
+    xdg-desktop-portal-hyprland
     wofi
     kitty
     kitty-themes
     swaybg
-    waypaper
+    gnumake
+    gnumake42
 
-   #waybar
-    nm-tray
+   # smartcard applications
+    pam_p11
+    #pam_usb
+    nss
+    nss_latest
+    pkgs.pcscliteWithPolkit
+    pkgs.pcsc-tools
+    pkgs.scmccid
+    pkgs.ccid
+    pkgs.pcsclite
+    pkgs.opensc
+
+   # vim and programming langauges 
+    vim
+    neovim
+    lunarvim
+    vimPlugins.nvim-treesitter-textsubjects
+    nodejs_22
+    lua
+    python3
+    
+    # cosmic applications
+    cosmic-bg
+    cosmic-osd
+    cosmic-term
+    cosmic-edit
+    cosmic-comp
+    cosmic-store
+    cosmic-randr
+    cosmic-panel
+    cosmic-icons
+    cosmic-files
+    cosmic-applets
+    cosmic-settings
+    # cosmic-protocols
+    cosmic-session
+    cosmic-applets
+    cosmic-screenshot
+    cosmic-launcher
+    cosmic-wallpapers
+    cosmic-screenshot
+    cosmic-applibrary
+    cosmic-design-demo
+    cosmic-notifications
+    cosmic-settings-daemon
+    cosmic-workspaces-epoch
+    flam3
+    qosmic
+
+    xdg-desktop-portal-cosmic
+
+   # gaming
+    steam
+    sc-controller
+    gamescope
+    protonup-qt
+    lutris
+    steamtinkerlaunch
+   
+   # nvidia drivers
+   # nvidia_x11
+   # nvidia-settings
+   # nvidia-persistenced
+   
+   # waybar appllcations
+    waybar
     gtkmm3
-    gtk-layer-shell
     jsoncpp
     fmt
-    wayland
     spdlog
     # libgtk-3-dev #[gtk-layer-shell]
     gobject-introspection #[gtk-layer-shell]
@@ -388,70 +426,90 @@
     libevdev #[KeyboardState module]
     # xkbregistry
     upower #[UPower battery module]
-    nwg-look
-    feh
-    wl-clipboard
-    wlogout
-    supergfxctl
-    asusctl
-    blueman
+
+    # asus kernel and sensors
     linuxKernel.packages.linux_zen.zenpower
     linuxKernel.packages.linux_zen.asus-ec-sensors
     linuxKernel.packages.linux_zen.asus-wmi-sensors
     linuxKernel.packages.linux_xanmod.asus-ec-sensors
-    linuxKernel.packages.linux_xanmod_latest.asus-ec-sensors
+    # linuxKernel.pacakges.linux_xanmod_latest.asus-ec-sensors
     linuxKernel.packages.linux_xanmod_stable.asus-ec-sensors
     linuxKernel.packages.linux_xanmod_latest.asus-wmi-sensors
 
-    # Steam
-    steam
-    steam-run
-    # steamPackages.steam-runtime
-    sc-controller
-    gamescope
-    protonup-qt
-    lutris
-    steamtinkerlaunch
-    ];
-
-  fonts = {
+    # applications
+    virt-manager
+    sublime4
+   ];
+   
+   # fonts, folders, themes, icons
+    fonts = {
     fonts = with pkgs; [
       noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-emoji
       font-awesome
+      font-awesome_5
+      font-awesome_4
       source-han-sans
       open-sans
-      source-han-sans-japanese
-      source-han-serif-japanese
       openmoji-color
-      terminus_font_ttf
-      # terminus-nerdfont
+      hermit
+      source-code-pro
+      terminus_font
+      nerdfonts
+      terminus-nerdfont
+      jetbrains-mono
+      nixos-icons
+      material-icons
+      material-design-icons
+      sweet-folders
+      powerline-fonts
+      corefonts
+      google-fonts
+      jetbrains-mono
+      jetbrains-toolbox
+      udev-gothic
+      hack-font
+    
     ];
-     
+
     fontconfig.defaultFonts = {
       serif = [ "Noto Serif" "Source Han Serif" ];
       sansSerif = [ "Open Sans" "Source Han Sans" ];
       emoji = [ "openmoji-color" ];
     };
-  };
+  };    
 
-  environment.sessionVariables = {
-  FLAKE = "/etc/nixos";
-  };
-  
+    # startship prompt
+    programs.starship.enable = true;
+
+    environment.sessionVariables = {
+     FLAKE = "/etc/nixos/";
+        };
+
+    # cosmic-comp
+    environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
+
+  # Hyperland window manager
+   programs.hyprland.enable = true;
+
    # nix grub generations
-  nix.settings.auto-optimise-store = true;
-  nix.gc = {
-  automatic = true;
-  dates = "weekly";
-  options = "--delete-older-than 3d";
+   system.autoUpgrade.enable = true;
+   system.autoUpgrade.operation = "boot";
+   system.autoUpgrade.dates = "24:00";
+   # nix.settings.auto-optimise-store = true;
+   nix.gc = {
+   automatic = true;
+   dates = "Sun 24:00";
+   options = "--delete-older-than 7d";
   };
 
     nixpkgs.config.permittedInsecurePackages = [
-    # "nodejs-12.22.12"
+    "nodejs-12.22.12"
     "python-2.7.18.7"
+    "nix-2.17.1"
+    "openssl-1.1.1w"
   ];
+
+  
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -461,7 +519,7 @@
   #   enableSSHSupport = true;
   # };
 
-  # List services that you want to enable:
+  # Asus List services that you want to enable:
   services.supergfxd.enable = true;
   services = {
     asusd = {
@@ -475,73 +533,24 @@
   };  # Power Profiles
   systemd.services.supergfxd.path = [ pkgs.pciutils ];
   services.power-profiles-daemon.enable = true;
-  systemd.services.power-profiles-daemon = {
-  enable = true;
-  wantedBy = [ "multi-user.target" ];
-  };
-  
-  #pscsd
-  services.pcscd.enable = true;
-  services.pcscd.plugins = [
-    pkgs.ccid
-    pkgs.opensc
-    pkgs.pcsclite
-    pkgs.pcsc-tools
-    ];
- 
-  # tlp services
- # services.tlp.enable = true;
-  
-   # amdgpu setup
-    #Enable OpenGL
-  hardware.graphics = {
-    enable = true;
-    # driSupport = true;
-    enable32Bit = true;
-  };
 
-  hardware.graphics.extraPackages = with pkgs; [
-  amdvlk
-  ];
-  # For 32 bit applications 
-  hardware.graphics.extraPackages32 = with pkgs; [
-  driversi686Linux.amdvlk
-  ];
-
-
-  services.xserver.videoDrivers = [ "amdgpu" ];
-  hardware.nvidia.powerManagement = {
-  enable = true;
-  finegrained = true;
-    };
-
-  hardware.nvidia = {
-    modesetting.enable = true;
-    nvidiaSettings = true;
-    open = false;
-    prime = {
-      reverseSync.enable = true; 
-    #   sync = {
-    #    enable = true;
-    #   };
-      offload = {
-       enable =  true;
-       enableOffloadCmd = true; # Provides `nvidia-offload` command.
-      };
-    };
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
 
   # List services that you want to enable:
-    services.teamviewer.enable = true;
     services.sshd.enable = true;
+  # services.tlp.enable = true;
+    services.pcscd.enable = true;
+    security.pam.p11.enable = true;
+    services.teamviewer.enable = true;
     services.postgresql.enable = true;
+    services.tailscale.enable = true;
+
     # services.asusd.enableUserService = true;
     # services.asusd.enable = true;
+
+  # list of programs with services
     programs.rog-control-center.enable = true;
-    programs.rog-control-center.autoStart = true;
+    programs.rog-control-center.autoStart = false;
     services.smartd.enable = true;
-    hardware.usbStorage.manageShutdown = true;
     programs.zsh.enableLsColors = true;
     programs.zsh.enableCompletion = true;
     programs.zsh.enableBashCompletion = true;
@@ -551,6 +560,7 @@
 
     programs.zsh.autosuggestions.async = true;
     virtualisation.kvmgt.enable = true;
+ 
 
     security.polkit.extraConfig = ''
       polkit.addRule(function(action, subject) {
@@ -560,18 +570,25 @@
         }
       });
   '';  
-
+             
+    
+  # cosmic-desktop services
+  # List services that you want to enable:
+  services.desktopManager.cosmic.enable = true;
+  services.displayManager.cosmic-greeter.enable = true;
+  
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
   services.openssh.ports = [
-  	  22
-  	];
+  	22
+   ];
 
   # Open ports in the firewall.
    networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-   networking.firewall.enable = false;
+  # networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
